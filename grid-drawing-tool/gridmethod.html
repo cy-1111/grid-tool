@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridMethod - SVG Drawing Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --sidebar-bg: #1a1a1a;
+            --sidebar-border: #2a2a2a;
+            --control-bg: #252525;
+            --control-hover: #303030;
+            --control-active: #404040;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --text-muted: #555;
+            --accent: #4a9eff;
+            --accent-dim: #2a5a9a;
+            --workspace-bg: #ffffff;
+            --grid-color: #e8e8e8;
+            --danger: #ff5555;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--sidebar-bg);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--control-bg);
+            border-radius: 3px;
+        }
+
+        .logo {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sidebar-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            display: flex;
+            gap: 4px;
+        }
+
+        .logo-box {
+            width: 24px;
+            height: 24px;
+            background: var(--text-primary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--sidebar-bg);
+        }
+
+        .logo-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .section-header {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .control-row {
+            margin-bottom: 12px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Button Group */
+        .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-group.wrap {
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 8px 12px;
+            background: var(--control-bg);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--control-hover);
+            color: var(--text-primary);
+        }
+
+        .btn.active {
+            background: var(--text-primary);
+            color: var(--sidebar-bg);
+        }
+
+        .btn.accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn.accent:hover {
+            background: #5aadff;
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn.danger:hover {
+            background: #ff6666;
+        }
+
+        .btn.small {
+            padding: 6px 10px;
+            font-size: 10px;
+        }
+
+        .btn.icon-btn {
+            padding: 8px;
+            flex: 0;
+            min-width: 34px;
+        }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* Toggle */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .toggle-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .toggle {
+            width: 40px;
+            height: 22px;
+            background: var(--control-bg);
+            border-radius: 11px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s ease;
+        }
+
+        .toggle.active {
+            background: var(--accent);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(18px);
+        }
+
+        /* Slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--control-bg);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Color Picker */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-preview {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 2px solid var(--control-bg);
+            cursor: pointer;
+        }
+
+        .color-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .color-hex {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--control-bg);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            width: 80px;
+        }
+
+        /* File Upload */
+        .file-upload {
+            display: flex;
+            gap: 8px;
+        }
+
+        .file-upload .btn {
+            flex: 1;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Workspace */
+        .workspace-container {
+            flex: 1;
+            background: #2a2a2a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .workspace {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .workspace-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            background: rgba(26, 26, 26, 0.9);
+            border-top: 1px solid var(--sidebar-border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-value {
+            color: var(--text-secondary);
+        }
+
+        /* Keyboard Shortcuts Hint */
+        .shortcuts-hint {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(26, 26, 26, 0.85);
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.8;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .shortcuts-hint kbd {
+            background: var(--control-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
+        /* Symmetry guide lines */
+        .symmetry-guide {
+            pointer-events: none;
+            stroke: rgba(74, 158, 255, 0.4);
+            stroke-width: 1;
+            stroke-dasharray: 8 4;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <div class="logo-box">G</div>
+                <div class="logo-box">M</div>
+            </div>
+            <span class="logo-text">GRIDMETHOD</span>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Tools</div>
+            <div class="btn-group" style="margin-bottom: 12px;">
+                <button class="btn active" id="tool-draw">draw</button>
+                <button class="btn" id="tool-erase">erase</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="btn-undo">undo</button>
+                <button class="btn" id="btn-redo">redo</button>
+                <button class="btn" id="btn-clear">clear</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Drawing</div>
+            
+            <div class="toggle-row">
+                <span class="toggle-label">merge adjacent</span>
+                <div class="toggle active" id="toggle-merge"></div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-label">
+                    <span>brush width</span>
+                    <span class="control-value" id="brush-width-value">1</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" class="slider" id="brush-width" min="1" max="20" value="1">
+                    <button class="btn icon-btn" id="brush-lock" title="Lock aspect ratio">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-label">
+                    <span>brush height</span>
+                    <span class="control-value" id="brush-height-value">1</span>
+                </div>
+                <input type="range" class="slider" id="brush-height" min="1" max="20" value="1">
+            </div>
+
+            <div class="control-row">
+                <div class="control-label">
+                    <span>corner radius</span>
+                    <span class="control-value" id="corner-radius-value">0</span>
+                </div>
+                <input type="range" class="slider" id="corner-radius" min="-100" max="100" value="0">
+            </div>
+
+            <div class="control-row">
+                <div class="control-label">fill color</div>
+                <div class="color-picker-wrapper">
+                    <div class="color-preview" id="color-preview" style="background: #000000;"></div>
+                    <input type="color" class="color-input" id="fill-color" value="#000000">
+                    <input type="text" class="color-hex" id="color-hex" value="#000000">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Grid</div>
+            <div class="control-row">
+                <div class="control-label">
+                    <span>cell size</span>
+                    <span class="control-value" id="cell-size-value">20</span>
+                </div>
+                <input type="range" class="slider" id="cell-size" min="8" max="64" value="20">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Symmetry</div>
+            
+            <div class="toggle-row">
+                <span class="toggle-label">symmetry drawing</span>
+                <div class="toggle" id="toggle-symmetry"></div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-label">symmetry mode</div>
+                <div class="btn-group wrap">
+                    <button class="btn small" id="sym-x">X-axis</button>
+                    <button class="btn small active" id="sym-y">Y-axis</button>
+                    <button class="btn small" id="sym-central">Central</button>
+                    <button class="btn small" id="sym-radial">Radial</button>
+                </div>
+            </div>
+
+            <div class="control-row" id="radial-segments-row" style="display: none;">
+                <div class="control-label">
+                    <span>radial segments</span>
+                    <span class="control-value" id="radial-segments-value">8</span>
+                </div>
+                <input type="range" class="slider" id="radial-segments" min="2" max="24" value="8">
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Background</div>
+            <div class="file-upload">
+                <button class="btn" id="btn-upload">upload image</button>
+                <button class="btn icon-btn" id="btn-remove-bg" title="Remove background">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <input type="file" class="file-input" id="file-input" accept="image/*">
+        </div>
+
+        <div class="section">
+            <div class="section-header">Export</div>
+            <div class="btn-group">
+                <button class="btn accent" id="btn-export-svg">SVG</button>
+                <button class="btn accent" id="btn-export-png">PNG</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="workspace-container">
+        <div class="workspace" id="workspace">
+            <svg class="workspace-svg" id="workspace-svg"></svg>
+        </div>
+        <div class="shortcuts-hint">
+            <kbd>LMB</kbd> draw &nbsp;&nbsp; <kbd>RMB</kbd> erase &nbsp;&nbsp; <kbd>MMB</kbd> pan<br>
+            <kbd>Scroll</kbd> zoom &nbsp;&nbsp; <kbd>Ctrl+Z</kbd> undo &nbsp;&nbsp; <kbd>Ctrl+Y</kbd> redo
+        </div>
+        <div class="status-bar">
+            <div class="status-item">zoom: <span class="status-value" id="status-zoom">100%</span></div>
+            <div class="status-item">cells: <span class="status-value" id="status-cells">0</span></div>
+            <div class="status-item">pos: <span class="status-value" id="status-pos">0, 0</span></div>
+        </div>
+    </main>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ============================================
+        // STATE
+        // ============================================
+        const state = {
+            // Grid data - Set of "x,y" strings for all filled cells
+            filledCells: new Set(),
+            
+            // Stamps - Array of stamp objects for non-merged rendering
+            // Each stamp: { x, y, width, height, cells: Set }
+            stamps: [],
+            
+            // History for undo/redo
+            history: [],
+            historyIndex: -1,
+            maxHistory: 50,
+            
+            // View transform
+            panX: 0,
+            panY: 0,
+            zoom: 1,
+            
+            // Tool state
+            currentTool: 'draw', // 'draw' or 'erase'
+            isDrawing: false,
+            isPanning: false,
+            lastPanPos: { x: 0, y: 0 },
+            lastDrawCell: null,
+            lastMirroredCells: [], // Track mirrored positions for drag step
+            
+            // Settings
+            brushWidth: 1,
+            brushHeight: 1,
+            brushLocked: true,
+            cornerRadius: 0, // -100 to 100
+            fillColor: '#000000',
+            cellSize: 20,
+            mergeAdjacent: true,
+            
+            // Symmetry settings
+            symmetryEnabled: false,
+            symmetryMode: 'y-axis', // 'x-axis', 'y-axis', 'central', 'radial'
+            radialSegments: 8, // Number of segments for radial mode
+            
+            // Background image
+            backgroundImage: null,
+            backgroundImageData: null,
+            
+            // Workspace dimensions
+            workspaceWidth: 0,
+            workspaceHeight: 0
+        };
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const elements = {
+            workspace: document.getElementById('workspace'),
+            svg: document.getElementById('workspace-svg'),
+            
+            // Tools
+            toolDraw: document.getElementById('tool-draw'),
+            toolErase: document.getElementById('tool-erase'),
+            btnUndo: document.getElementById('btn-undo'),
+            btnRedo: document.getElementById('btn-redo'),
+            btnClear: document.getElementById('btn-clear'),
+            
+            // Drawing controls
+            toggleMerge: document.getElementById('toggle-merge'),
+            brushWidth: document.getElementById('brush-width'),
+            brushWidthValue: document.getElementById('brush-width-value'),
+            brushHeight: document.getElementById('brush-height'),
+            brushHeightValue: document.getElementById('brush-height-value'),
+            brushLock: document.getElementById('brush-lock'),
+            cornerRadius: document.getElementById('corner-radius'),
+            cornerRadiusValue: document.getElementById('corner-radius-value'),
+            fillColor: document.getElementById('fill-color'),
+            colorPreview: document.getElementById('color-preview'),
+            colorHex: document.getElementById('color-hex'),
+            
+            // Grid
+            cellSize: document.getElementById('cell-size'),
+            cellSizeValue: document.getElementById('cell-size-value'),
+            
+            // Symmetry
+            toggleSymmetry: document.getElementById('toggle-symmetry'),
+            symX: document.getElementById('sym-x'),
+            symY: document.getElementById('sym-y'),
+            symCentral: document.getElementById('sym-central'),
+            symRadial: document.getElementById('sym-radial'),
+            radialSegmentsRow: document.getElementById('radial-segments-row'),
+            radialSegments: document.getElementById('radial-segments'),
+            radialSegmentsValue: document.getElementById('radial-segments-value'),
+            
+            // Background
+            btnUpload: document.getElementById('btn-upload'),
+            btnRemoveBg: document.getElementById('btn-remove-bg'),
+            fileInput: document.getElementById('file-input'),
+            
+            // Export
+            btnExportSvg: document.getElementById('btn-export-svg'),
+            btnExportPng: document.getElementById('btn-export-png'),
+            
+            // Status
+            statusZoom: document.getElementById('status-zoom'),
+            statusCells: document.getElementById('status-cells'),
+            statusPos: document.getElementById('status-pos')
+        };
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        function init() {
+            updateWorkspaceSize();
+            centerWorkspace();
+            setupEventListeners();
+            saveState();
+            render();
+        }
+
+        function updateWorkspaceSize() {
+            const rect = elements.workspace.getBoundingClientRect();
+            state.workspaceWidth = rect.width;
+            state.workspaceHeight = rect.height;
+            elements.svg.setAttribute('width', rect.width);
+            elements.svg.setAttribute('height', rect.height);
+        }
+
+        function centerWorkspace() {
+            state.panX = state.workspaceWidth / 2;
+            state.panY = state.workspaceHeight / 2;
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        function setupEventListeners() {
+            // Window resize
+            window.addEventListener('resize', () => {
+                updateWorkspaceSize();
+                render();
+            });
+
+            // Workspace mouse events
+            elements.workspace.addEventListener('mousedown', onMouseDown);
+            elements.workspace.addEventListener('mousemove', onMouseMove);
+            elements.workspace.addEventListener('mouseup', onMouseUp);
+            elements.workspace.addEventListener('mouseleave', onMouseUp);
+            elements.workspace.addEventListener('wheel', onWheel, { passive: false });
+            elements.workspace.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Tool buttons
+            elements.toolDraw.addEventListener('click', () => setTool('draw'));
+            elements.toolErase.addEventListener('click', () => setTool('erase'));
+            elements.btnUndo.addEventListener('click', undo);
+            elements.btnRedo.addEventListener('click', redo);
+            elements.btnClear.addEventListener('click', clearAll);
+
+            // Toggle merge
+            elements.toggleMerge.addEventListener('click', () => {
+                state.mergeAdjacent = !state.mergeAdjacent;
+                elements.toggleMerge.classList.toggle('active', state.mergeAdjacent);
+                render();
+            });
+
+            // Brush controls
+            elements.brushWidth.addEventListener('input', (e) => {
+                state.brushWidth = parseInt(e.target.value);
+                elements.brushWidthValue.textContent = state.brushWidth;
+                if (state.brushLocked) {
+                    state.brushHeight = state.brushWidth;
+                    elements.brushHeight.value = state.brushHeight;
+                    elements.brushHeightValue.textContent = state.brushHeight;
+                }
+            });
+
+            elements.brushHeight.addEventListener('input', (e) => {
+                state.brushHeight = parseInt(e.target.value);
+                elements.brushHeightValue.textContent = state.brushHeight;
+                if (state.brushLocked) {
+                    state.brushWidth = state.brushHeight;
+                    elements.brushWidth.value = state.brushWidth;
+                    elements.brushWidthValue.textContent = state.brushWidth;
+                }
+            });
+
+            elements.brushLock.addEventListener('click', () => {
+                state.brushLocked = !state.brushLocked;
+                elements.brushLock.classList.toggle('active', state.brushLocked);
+                if (state.brushLocked) {
+                    state.brushHeight = state.brushWidth;
+                    elements.brushHeight.value = state.brushHeight;
+                    elements.brushHeightValue.textContent = state.brushHeight;
+                }
+            });
+            elements.brushLock.classList.add('active');
+
+            // Corner radius
+            elements.cornerRadius.addEventListener('input', (e) => {
+                state.cornerRadius = parseInt(e.target.value);
+                elements.cornerRadiusValue.textContent = state.cornerRadius;
+                render();
+            });
+
+            // Fill color
+            elements.fillColor.addEventListener('input', (e) => {
+                state.fillColor = e.target.value;
+                elements.colorPreview.style.background = state.fillColor;
+                elements.colorHex.value = state.fillColor;
+                render();
+            });
+
+            elements.colorPreview.addEventListener('click', () => {
+                elements.fillColor.click();
+            });
+
+            elements.colorHex.addEventListener('change', (e) => {
+                let val = e.target.value;
+                if (!val.startsWith('#')) val = '#' + val;
+                if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                    state.fillColor = val;
+                    elements.fillColor.value = val;
+                    elements.colorPreview.style.background = val;
+                    render();
+                }
+            });
+
+            // Cell size
+            elements.cellSize.addEventListener('input', (e) => {
+                state.cellSize = parseInt(e.target.value);
+                elements.cellSizeValue.textContent = state.cellSize;
+                render();
+            });
+
+            // Background image
+            elements.btnUpload.addEventListener('click', () => {
+                elements.fileInput.click();
+            });
+
+            elements.fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            state.backgroundImage = img;
+                            state.backgroundImageData = ev.target.result;
+                            render();
+                        };
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            elements.btnRemoveBg.addEventListener('click', () => {
+                state.backgroundImage = null;
+                state.backgroundImageData = null;
+                elements.fileInput.value = '';
+                render();
+            });
+
+            // Export
+            elements.btnExportSvg.addEventListener('click', exportSVG);
+            elements.btnExportPng.addEventListener('click', exportPNG);
+
+            // Symmetry controls
+            elements.toggleSymmetry.addEventListener('click', () => {
+                state.symmetryEnabled = !state.symmetryEnabled;
+                elements.toggleSymmetry.classList.toggle('active', state.symmetryEnabled);
+                render();
+            });
+
+            elements.symX.addEventListener('click', () => {
+                state.symmetryMode = 'x-axis';
+                updateSymmetryButtons();
+                render();
+            });
+
+            elements.symY.addEventListener('click', () => {
+                state.symmetryMode = 'y-axis';
+                updateSymmetryButtons();
+                render();
+            });
+
+            elements.symCentral.addEventListener('click', () => {
+                state.symmetryMode = 'central';
+                updateSymmetryButtons();
+                render();
+            });
+
+            elements.symRadial.addEventListener('click', () => {
+                state.symmetryMode = 'radial';
+                updateSymmetryButtons();
+                render();
+            });
+
+            elements.radialSegments.addEventListener('input', (e) => {
+                state.radialSegments = parseInt(e.target.value);
+                elements.radialSegmentsValue.textContent = state.radialSegments;
+                render();
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z') {
+                        e.preventDefault();
+                        undo();
+                    } else if (e.key === 'y') {
+                        e.preventDefault();
+                        redo();
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // MOUSE HANDLING
+        // ============================================
+        function onMouseDown(e) {
+            const rect = elements.workspace.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (e.button === 1) {
+                // Middle mouse - pan
+                state.isPanning = true;
+                state.lastPanPos = { x: e.clientX, y: e.clientY };
+                elements.workspace.style.cursor = 'grabbing';
+            } else if (e.button === 0) {
+                // Left mouse - draw
+                state.isDrawing = true;
+                state.currentTool = 'draw';
+                updateToolButtons();
+                drawAtPosition(x, y);
+            } else if (e.button === 2) {
+                // Right mouse - erase
+                state.isDrawing = true;
+                state.currentTool = 'erase';
+                updateToolButtons();
+                drawAtPosition(x, y);
+            }
+        }
+
+        function onMouseMove(e) {
+            const rect = elements.workspace.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Update status position
+            const gridPos = screenToGrid(x, y);
+            elements.statusPos.textContent = `${gridPos.x}, ${gridPos.y}`;
+
+            if (state.isPanning) {
+                const dx = e.clientX - state.lastPanPos.x;
+                const dy = e.clientY - state.lastPanPos.y;
+                state.panX += dx;
+                state.panY += dy;
+                state.lastPanPos = { x: e.clientX, y: e.clientY };
+                render();
+            } else if (state.isDrawing) {
+                drawAtPosition(x, y);
+            }
+        }
+
+        function onMouseUp(e) {
+            if (state.isDrawing) {
+                state.isDrawing = false;
+                state.lastDrawCell = null;
+                saveState();
+            }
+            if (state.isPanning) {
+                state.isPanning = false;
+                elements.workspace.style.cursor = 'crosshair';
+            }
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            
+            const rect = elements.workspace.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(0.1, Math.min(10, state.zoom * zoomFactor));
+
+            // Zoom towards mouse position
+            const worldX = (mouseX - state.panX) / state.zoom;
+            const worldY = (mouseY - state.panY) / state.zoom;
+            
+            state.zoom = newZoom;
+            
+            state.panX = mouseX - worldX * state.zoom;
+            state.panY = mouseY - worldY * state.zoom;
+
+            elements.statusZoom.textContent = Math.round(state.zoom * 100) + '%';
+            render();
+        }
+
+        // ============================================
+        // COORDINATE CONVERSION
+        // ============================================
+        function screenToGrid(screenX, screenY) {
+            const worldX = (screenX - state.panX) / state.zoom;
+            const worldY = (screenY - state.panY) / state.zoom;
+            return {
+                x: Math.floor(worldX / state.cellSize),
+                y: Math.floor(worldY / state.cellSize)
+            };
+        }
+
+        function gridToScreen(gridX, gridY) {
+            return {
+                x: gridX * state.cellSize * state.zoom + state.panX,
+                y: gridY * state.cellSize * state.zoom + state.panY
+            };
+        }
+
+        // ============================================
+        // DRAWING LOGIC
+        // ============================================
+        
+        // Calculate symmetry center in grid coordinates
+        function getSymmetryCenter() {
+            // Use workspace center as symmetry reference
+            const centerScreenX = state.workspaceWidth / 2;
+            const centerScreenY = state.workspaceHeight / 2;
+            const centerGrid = screenToGrid(centerScreenX, centerScreenY);
+            return {
+                x: centerGrid.x + 0.5, // Center of the grid cell
+                y: centerGrid.y + 0.5
+            };
+        }
+        
+        // Calculate mirrored stamp positions based on symmetry mode
+        function getMirroredPositions(stampX, stampY, brushW, brushH) {
+            const positions = [{ x: stampX, y: stampY }]; // Always include original
+            
+            if (!state.symmetryEnabled) {
+                return positions;
+            }
+            
+            const center = getSymmetryCenter();
+            
+            // Calculate stamp center
+            const stampCenterX = stampX + brushW / 2;
+            const stampCenterY = stampY + brushH / 2;
+            
+            if (state.symmetryMode === 'x-axis') {
+                // Mirror across horizontal center line (reflect Y)
+                const mirroredCenterY = 2 * center.y - stampCenterY;
+                const mirroredStampY = Math.round(mirroredCenterY - brushH / 2);
+                positions.push({ x: stampX, y: mirroredStampY });
+            } else if (state.symmetryMode === 'y-axis') {
+                // Mirror across vertical center line (reflect X)
+                const mirroredCenterX = 2 * center.x - stampCenterX;
+                const mirroredStampX = Math.round(mirroredCenterX - brushW / 2);
+                positions.push({ x: mirroredStampX, y: stampY });
+            } else if (state.symmetryMode === 'central') {
+                // 180-degree rotational symmetry (reflect both X and Y)
+                const mirroredCenterX = 2 * center.x - stampCenterX;
+                const mirroredCenterY = 2 * center.y - stampCenterY;
+                const mirroredStampX = Math.round(mirroredCenterX - brushW / 2);
+                const mirroredStampY = Math.round(mirroredCenterY - brushH / 2);
+                positions.push({ x: mirroredStampX, y: mirroredStampY });
+            } else if (state.symmetryMode === 'radial') {
+                // Radial/mandala symmetry - replicate around center
+                const segments = state.radialSegments;
+                const angleStep = (2 * Math.PI) / segments;
+                
+                // Vector from center to stamp center
+                const dx = stampCenterX - center.x;
+                const dy = stampCenterY - center.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const baseAngle = Math.atan2(dy, dx);
+                
+                // Generate rotated positions (skip the first one as it's already added)
+                for (let i = 1; i < segments; i++) {
+                    const angle = baseAngle + (i * angleStep);
+                    const rotatedCenterX = center.x + distance * Math.cos(angle);
+                    const rotatedCenterY = center.y + distance * Math.sin(angle);
+                    const rotatedStampX = Math.round(rotatedCenterX - brushW / 2);
+                    const rotatedStampY = Math.round(rotatedCenterY - brushH / 2);
+                    positions.push({ x: rotatedStampX, y: rotatedStampY });
+                }
+                
+                // Also add mirrored copies for kaleidoscope effect
+                for (let i = 0; i < segments; i++) {
+                    const angle = -baseAngle + (i * angleStep);
+                    const mirroredCenterX = center.x + distance * Math.cos(angle);
+                    const mirroredCenterY = center.y + distance * Math.sin(angle);
+                    const mirroredStampX = Math.round(mirroredCenterX - brushW / 2);
+                    const mirroredStampY = Math.round(mirroredCenterY - brushH / 2);
+                    
+                    // Avoid duplicates
+                    const exists = positions.some(p => p.x === mirroredStampX && p.y === mirroredStampY);
+                    if (!exists) {
+                        positions.push({ x: mirroredStampX, y: mirroredStampY });
+                    }
+                }
+            }
+            
+            return positions;
+        }
+        
+        function drawAtPosition(screenX, screenY) {
+            const gridPos = screenToGrid(screenX, screenY);
+            
+            // Calculate stamp top-left position (centered on cursor)
+            const halfW = Math.floor((state.brushWidth - 1) / 2);
+            const halfH = Math.floor((state.brushHeight - 1) / 2);
+            const stampX = gridPos.x - halfW;
+            const stampY = gridPos.y - halfH;
+            
+            // Calculate drag step based on brush size
+            const dragStep = Math.min(state.brushWidth, state.brushHeight);
+            
+            // Check if we've moved enough to place a new stamp
+            if (state.lastDrawCell !== null) {
+                const [lastX, lastY] = state.lastDrawCell.split(',').map(Number);
+                const dx = Math.abs(stampX - lastX);
+                const dy = Math.abs(stampY - lastY);
+                
+                if (dx < dragStep && dy < dragStep) {
+                    return;
+                }
+            }
+            
+            // Record this stamp position
+            state.lastDrawCell = `${stampX},${stampY}`;
+            
+            // Get all positions (original + mirrored)
+            const positions = getMirroredPositions(stampX, stampY, state.brushWidth, state.brushHeight);
+
+            if (state.currentTool === 'draw') {
+                // Draw at all positions
+                for (const pos of positions) {
+                    const stampCells = new Set();
+                    for (let dy = 0; dy < state.brushHeight; dy++) {
+                        for (let dx = 0; dx < state.brushWidth; dx++) {
+                            const cx = pos.x + dx;
+                            const cy = pos.y + dy;
+                            const key = `${cx},${cy}`;
+                            stampCells.add(key);
+                            state.filledCells.add(key);
+                        }
+                    }
+                    
+                    state.stamps.push({
+                        x: pos.x,
+                        y: pos.y,
+                        width: state.brushWidth,
+                        height: state.brushHeight,
+                        cells: stampCells
+                    });
+                }
+            } else {
+                // Erase at all positions
+                const allCellsToRemove = new Set();
+                
+                for (const pos of positions) {
+                    for (let dy = 0; dy < state.brushHeight; dy++) {
+                        for (let dx = 0; dx < state.brushWidth; dx++) {
+                            const cx = pos.x + dx;
+                            const cy = pos.y + dy;
+                            const key = `${cx},${cy}`;
+                            allCellsToRemove.add(key);
+                            state.filledCells.delete(key);
+                        }
+                    }
+                }
+                
+                // Update stamps
+                const newStamps = [];
+                for (const stamp of state.stamps) {
+                    let hasRemainingCells = false;
+                    const remainingCells = new Set();
+                    
+                    for (const cell of stamp.cells) {
+                        if (!allCellsToRemove.has(cell) && state.filledCells.has(cell)) {
+                            remainingCells.add(cell);
+                            hasRemainingCells = true;
+                        }
+                    }
+                    
+                    if (hasRemainingCells) {
+                        if (remainingCells.size < stamp.cells.size) {
+                            for (const cell of remainingCells) {
+                                const [cx, cy] = cell.split(',').map(Number);
+                                newStamps.push({
+                                    x: cx,
+                                    y: cy,
+                                    width: 1,
+                                    height: 1,
+                                    cells: new Set([cell])
+                                });
+                            }
+                        } else {
+                            newStamps.push(stamp);
+                        }
+                    }
+                }
+                state.stamps = newStamps;
+            }
+
+            elements.statusCells.textContent = state.filledCells.size;
+            render();
+        }
+        
+        function rebuildStampsFromCells() {
+            state.stamps = [];
+            for (const key of state.filledCells) {
+                const [x, y] = key.split(',').map(Number);
+                state.stamps.push({
+                    x: x,
+                    y: y,
+                    width: 1,
+                    height: 1,
+                    cells: new Set([key])
+                });
+            }
+        }
+
+        function setTool(tool) {
+            state.currentTool = tool;
+            updateToolButtons();
+        }
+
+        function updateToolButtons() {
+            elements.toolDraw.classList.toggle('active', state.currentTool === 'draw');
+            elements.toolErase.classList.toggle('active', state.currentTool === 'erase');
+        }
+
+        function updateSymmetryButtons() {
+            elements.symX.classList.toggle('active', state.symmetryMode === 'x-axis');
+            elements.symY.classList.toggle('active', state.symmetryMode === 'y-axis');
+            elements.symCentral.classList.toggle('active', state.symmetryMode === 'central');
+            elements.symRadial.classList.toggle('active', state.symmetryMode === 'radial');
+            
+            // Show/hide radial segments slider
+            elements.radialSegmentsRow.style.display = state.symmetryMode === 'radial' ? 'block' : 'none';
+        }
+
+        // ============================================
+        // HISTORY (UNDO/REDO)
+        // ============================================
+        function saveState() {
+            // Remove future states if we're not at the end
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            
+            // Save current state (both cells and stamps)
+            state.history.push({
+                cells: new Set(state.filledCells),
+                stamps: state.stamps.map(s => ({
+                    x: s.x,
+                    y: s.y,
+                    width: s.width,
+                    height: s.height,
+                    cells: new Set(s.cells)
+                }))
+            });
+            state.historyIndex++;
+
+            // Limit history size
+            if (state.history.length > state.maxHistory) {
+                state.history.shift();
+                state.historyIndex--;
+            }
+        }
+
+        function undo() {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                const saved = state.history[state.historyIndex];
+                state.filledCells = new Set(saved.cells);
+                state.stamps = saved.stamps.map(s => ({
+                    x: s.x,
+                    y: s.y,
+                    width: s.width,
+                    height: s.height,
+                    cells: new Set(s.cells)
+                }));
+                elements.statusCells.textContent = state.filledCells.size;
+                render();
+            }
+        }
+
+        function redo() {
+            if (state.historyIndex < state.history.length - 1) {
+                state.historyIndex++;
+                const saved = state.history[state.historyIndex];
+                state.filledCells = new Set(saved.cells);
+                state.stamps = saved.stamps.map(s => ({
+                    x: s.x,
+                    y: s.y,
+                    width: s.width,
+                    height: s.height,
+                    cells: new Set(s.cells)
+                }));
+                elements.statusCells.textContent = state.filledCells.size;
+                render();
+            }
+        }
+
+        function clearAll() {
+            state.filledCells.clear();
+            state.stamps = [];
+            elements.statusCells.textContent = 0;
+            saveState();
+            render();
+        }
+
+        // ============================================
+        // RENDERING
+        // ============================================
+        function render() {
+            const svg = elements.svg;
+            svg.innerHTML = '';
+
+            const width = state.workspaceWidth;
+            const height = state.workspaceHeight;
+
+            // Background
+            const bg = createSVGElement('rect', {
+                x: 0, y: 0, width, height,
+                fill: '#ffffff'
+            });
+            svg.appendChild(bg);
+
+            // Background image (if any)
+            if (state.backgroundImage && state.backgroundImageData) {
+                const img = createSVGElement('image', {
+                    href: state.backgroundImageData,
+                    x: state.panX,
+                    y: state.panY,
+                    width: state.backgroundImage.width * state.zoom,
+                    height: state.backgroundImage.height * state.zoom,
+                    preserveAspectRatio: 'none'
+                });
+                svg.appendChild(img);
+            }
+
+            // Grid
+            renderGrid(svg, width, height);
+
+            // Drawing
+            if (state.mergeAdjacent) {
+                renderMergedGeometry(svg);
+            } else {
+                renderIndividualCells(svg);
+            }
+            
+            // Symmetry guide lines
+            if (state.symmetryEnabled) {
+                renderSymmetryGuides(svg, width, height);
+            }
+        }
+        
+        function renderSymmetryGuides(svg, width, height) {
+            const guideGroup = createSVGElement('g', { class: 'symmetry-guides' });
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            if (state.symmetryMode === 'x-axis' || state.symmetryMode === 'central') {
+                // Horizontal line
+                const hLine = createSVGElement('line', {
+                    x1: 0, y1: centerY,
+                    x2: width, y2: centerY,
+                    class: 'symmetry-guide'
+                });
+                guideGroup.appendChild(hLine);
+            }
+            
+            if (state.symmetryMode === 'y-axis' || state.symmetryMode === 'central') {
+                // Vertical line
+                const vLine = createSVGElement('line', {
+                    x1: centerX, y1: 0,
+                    x2: centerX, y2: height,
+                    class: 'symmetry-guide'
+                });
+                guideGroup.appendChild(vLine);
+            }
+            
+            if (state.symmetryMode === 'central') {
+                // Center point indicator
+                const centerCircle = createSVGElement('circle', {
+                    cx: centerX, cy: centerY, r: 6,
+                    fill: 'none',
+                    stroke: 'rgba(74, 158, 255, 0.6)',
+                    'stroke-width': 2
+                });
+                guideGroup.appendChild(centerCircle);
+            }
+            
+            if (state.symmetryMode === 'radial') {
+                // Radial guide lines from center
+                const segments = state.radialSegments;
+                const angleStep = (2 * Math.PI) / segments;
+                const maxRadius = Math.max(width, height);
+                
+                for (let i = 0; i < segments; i++) {
+                    const angle = i * angleStep;
+                    const endX = centerX + maxRadius * Math.cos(angle);
+                    const endY = centerY + maxRadius * Math.sin(angle);
+                    
+                    const line = createSVGElement('line', {
+                        x1: centerX, y1: centerY,
+                        x2: endX, y2: endY,
+                        class: 'symmetry-guide'
+                    });
+                    guideGroup.appendChild(line);
+                }
+                
+                // Center point indicator
+                const centerCircle = createSVGElement('circle', {
+                    cx: centerX, cy: centerY, r: 8,
+                    fill: 'none',
+                    stroke: 'rgba(74, 158, 255, 0.6)',
+                    'stroke-width': 2
+                });
+                guideGroup.appendChild(centerCircle);
+            }
+            
+            svg.appendChild(guideGroup);
+        }
+
+        function renderGrid(svg, width, height) {
+            const cellScreenSize = state.cellSize * state.zoom;
+            
+            // Calculate visible grid range
+            const startX = Math.floor(-state.panX / cellScreenSize) - 1;
+            const endX = Math.ceil((width - state.panX) / cellScreenSize) + 1;
+            const startY = Math.floor(-state.panY / cellScreenSize) - 1;
+            const endY = Math.ceil((height - state.panY) / cellScreenSize) + 1;
+
+            const gridGroup = createSVGElement('g', { class: 'grid' });
+
+            // Vertical lines
+            for (let x = startX; x <= endX; x++) {
+                const screenX = x * cellScreenSize + state.panX;
+                const line = createSVGElement('line', {
+                    x1: screenX, y1: 0,
+                    x2: screenX, y2: height,
+                    stroke: '#e0e0e0',
+                    'stroke-width': 1
+                });
+                gridGroup.appendChild(line);
+            }
+
+            // Horizontal lines
+            for (let y = startY; y <= endY; y++) {
+                const screenY = y * cellScreenSize + state.panY;
+                const line = createSVGElement('line', {
+                    x1: 0, y1: screenY,
+                    x2: width, y2: screenY,
+                    stroke: '#e0e0e0',
+                    'stroke-width': 1
+                });
+                gridGroup.appendChild(line);
+            }
+
+            svg.appendChild(gridGroup);
+        }
+
+        function renderIndividualCells(svg) {
+            // Non-merged mode: render each stamp as an independent shape
+            const cellScreenSize = state.cellSize * state.zoom;
+            const radiusFraction = Math.abs(state.cornerRadius) / 100;
+
+            const group = createSVGElement('g', { class: 'stamps' });
+
+            for (const stamp of state.stamps) {
+                const screenPos = gridToScreen(stamp.x, stamp.y);
+                const stampWidth = stamp.width * cellScreenSize;
+                const stampHeight = stamp.height * cellScreenSize;
+                
+                // Calculate radius based on the smaller dimension of the stamp
+                const minDim = Math.min(stampWidth, stampHeight);
+                const radius = radiusFraction * minDim / 2;
+
+                let element;
+
+                if (state.cornerRadius === 0) {
+                    // Sharp square corners
+                    element = createSVGElement('rect', {
+                        x: screenPos.x,
+                        y: screenPos.y,
+                        width: stampWidth,
+                        height: stampHeight,
+                        fill: state.fillColor
+                    });
+                } else if (state.cornerRadius > 0) {
+                    // Outward rounded corners
+                    const path = createOutwardRoundedCellPath(
+                        screenPos.x, screenPos.y,
+                        stampWidth, stampHeight,
+                        radius
+                    );
+                    element = createSVGElement('path', {
+                        d: path,
+                        fill: state.fillColor
+                    });
+                } else {
+                    // Inward concave corners
+                    const path = createInwardConcaveCellPath(
+                        screenPos.x, screenPos.y,
+                        stampWidth, stampHeight,
+                        radius
+                    );
+                    element = createSVGElement('path', {
+                        d: path,
+                        fill: state.fillColor
+                    });
+                }
+
+                group.appendChild(element);
+            }
+
+            svg.appendChild(group);
+        }
+
+        // ============================================
+        // MERGED GEOMETRY - The heart of the app
+        // ============================================
+        function renderMergedGeometry(svg) {
+            if (state.filledCells.size === 0) return;
+
+            // Find connected components
+            const components = findConnectedComponents();
+            
+            const group = createSVGElement('g', { class: 'merged' });
+
+            for (const component of components) {
+                // Generate contour path for this component
+                const path = generateMergedContourPath(component);
+                if (path) {
+                    const pathEl = createSVGElement('path', {
+                        d: path,
+                        fill: state.fillColor,
+                        'fill-rule': 'evenodd'
+                    });
+                    group.appendChild(pathEl);
+                }
+            }
+
+            svg.appendChild(group);
+        }
+
+        function findConnectedComponents() {
+            const visited = new Set();
+            const components = [];
+
+            for (const key of state.filledCells) {
+                if (visited.has(key)) continue;
+
+                // BFS to find connected component
+                const component = new Set();
+                const queue = [key];
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    if (visited.has(current)) continue;
+                    visited.add(current);
+                    component.add(current);
+
+                    const [x, y] = current.split(',').map(Number);
+                    const neighbors = [
+                        `${x-1},${y}`, `${x+1},${y}`,
+                        `${x},${y-1}`, `${x},${y+1}`
+                    ];
+
+                    for (const neighbor of neighbors) {
+                        if (state.filledCells.has(neighbor) && !visited.has(neighbor)) {
+                            queue.push(neighbor);
+                        }
+                    }
+                }
+
+                components.push(component);
+            }
+
+            return components;
+        }
+
+        function generateMergedContourPath(component) {
+            const cellSet = new Set(component);
+            
+            // Use marching squares approach for clean contour extraction
+            // Build a grid of corner vertices and their states
+            
+            // Find bounding box
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const key of component) {
+                const [x, y] = key.split(',').map(Number);
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+
+            // Collect all boundary edges with proper orientation
+            // Each edge goes from one grid vertex to another
+            // We store edges as directed segments for clockwise contour
+            const edgeMap = new Map(); // "x1,y1" -> [{x2, y2, used}]
+
+            for (const key of component) {
+                const [cx, cy] = key.split(',').map(Number);
+                
+                // Top edge (if no cell above)
+                if (!cellSet.has(`${cx},${cy-1}`)) {
+                    addDirectedEdge(edgeMap, cx, cy, cx + 1, cy); // left to right
+                }
+                // Bottom edge (if no cell below) 
+                if (!cellSet.has(`${cx},${cy+1}`)) {
+                    addDirectedEdge(edgeMap, cx + 1, cy + 1, cx, cy + 1); // right to left
+                }
+                // Left edge (if no cell to left)
+                if (!cellSet.has(`${cx-1},${cy}`)) {
+                    addDirectedEdge(edgeMap, cx, cy + 1, cx, cy); // bottom to top
+                }
+                // Right edge (if no cell to right)
+                if (!cellSet.has(`${cx+1},${cy}`)) {
+                    addDirectedEdge(edgeMap, cx + 1, cy, cx + 1, cy + 1); // top to bottom
+                }
+            }
+
+            // Trace contours by following directed edges
+            const contours = traceDirectedContours(edgeMap);
+            
+            if (contours.length === 0) return null;
+
+            // Generate SVG path with corner rounding
+            return generateRoundedContourPath(contours);
+        }
+
+        function addDirectedEdge(edgeMap, x1, y1, x2, y2) {
+            const key = `${x1},${y1}`;
+            if (!edgeMap.has(key)) {
+                edgeMap.set(key, []);
+            }
+            edgeMap.get(key).push({ x: x2, y: y2, used: false });
+        }
+
+        function traceDirectedContours(edgeMap) {
+            const contours = [];
+
+            // Find all starting points and trace
+            for (const [startKey, edges] of edgeMap) {
+                for (const edge of edges) {
+                    if (edge.used) continue;
+
+                    // Start tracing from this edge
+                    const contour = [];
+                    const [sx, sy] = startKey.split(',').map(Number);
+                    contour.push({ x: sx, y: sy });
+
+                    let currentKey = `${edge.x},${edge.y}`;
+                    edge.used = true;
+                    contour.push({ x: edge.x, y: edge.y });
+
+                    // Follow the chain
+                    while (currentKey !== startKey) {
+                        const nextEdges = edgeMap.get(currentKey);
+                        if (!nextEdges) break;
+
+                        let found = false;
+                        for (const nextEdge of nextEdges) {
+                            if (nextEdge.used) continue;
+                            
+                            nextEdge.used = true;
+                            currentKey = `${nextEdge.x},${nextEdge.y}`;
+                            
+                            // Don't add if it's the start (closing the loop)
+                            if (currentKey !== startKey) {
+                                contour.push({ x: nextEdge.x, y: nextEdge.y });
+                            }
+                            found = true;
+                            break;
+                        }
+
+                        if (!found) break;
+                    }
+
+                    if (contour.length >= 3) {
+                        // Simplify contour - remove collinear points
+                        const simplified = simplifyContour(contour);
+                        if (simplified.length >= 3) {
+                            contours.push(simplified);
+                        }
+                    }
+                }
+            }
+
+            return contours;
+        }
+
+        function simplifyContour(contour) {
+            // Remove collinear points to get only corner vertices
+            const result = [];
+            const n = contour.length;
+
+            for (let i = 0; i < n; i++) {
+                const prev = contour[(i - 1 + n) % n];
+                const curr = contour[i];
+                const next = contour[(i + 1) % n];
+
+                // Check if prev-curr-next are collinear
+                const dx1 = curr.x - prev.x;
+                const dy1 = curr.y - prev.y;
+                const dx2 = next.x - curr.x;
+                const dy2 = next.y - curr.y;
+
+                // If direction changes, this is a corner
+                if (dx1 !== dx2 || dy1 !== dy2) {
+                    result.push(curr);
+                }
+            }
+
+            return result;
+        }
+
+        function generateRoundedContourPath(contours) {
+            const cellScreenSize = state.cellSize * state.zoom;
+            const radiusFraction = Math.abs(state.cornerRadius) / 100;
+            const radius = radiusFraction * cellScreenSize;
+            const isNegative = state.cornerRadius < 0;
+
+            let pathData = '';
+
+            for (const contour of contours) {
+                if (contour.length < 3) continue;
+
+                const points = contour.map(p => ({
+                    x: p.x * cellScreenSize + state.panX,
+                    y: p.y * cellScreenSize + state.panY
+                }));
+
+                if (radius === 0) {
+                    // Sharp corners
+                    pathData += `M ${points[0].x} ${points[0].y} `;
+                    for (let i = 1; i < points.length; i++) {
+                        pathData += `L ${points[i].x} ${points[i].y} `;
+                    }
+                    pathData += 'Z ';
+                } else {
+                    // Rounded corners
+                    pathData += generateRoundedPolygonPath(points, radius, isNegative);
+                }
+            }
+
+            return pathData;
+        }
+
+        function generateRoundedPolygonPath(points, radius, isNegative) {
+            if (points.length < 3) return '';
+
+            const n = points.length;
+            let path = '';
+
+            // First, calculate all corner data
+            const corners = [];
+            
+            for (let i = 0; i < n; i++) {
+                const prev = points[(i - 1 + n) % n];
+                const curr = points[i];
+                const next = points[(i + 1) % n];
+
+                // Vectors from current point to neighbors
+                const v1 = { x: prev.x - curr.x, y: prev.y - curr.y };
+                const v2 = { x: next.x - curr.x, y: next.y - curr.y };
+
+                const len1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+                const len2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+
+                if (len1 === 0 || len2 === 0) {
+                    corners.push(null);
+                    continue;
+                }
+
+                // Unit vectors pointing away from corner
+                const u1 = { x: v1.x / len1, y: v1.y / len1 };
+                const u2 = { x: v2.x / len2, y: v2.y / len2 };
+
+                // Cross product determines turn direction
+                // For clockwise contours: cross < 0 = right turn (outer/convex corner)
+                //                        cross > 0 = left turn (inner/concave corner)
+                const cross = u1.x * u2.y - u1.y * u2.x;
+                const isOuterCorner = cross < 0;
+
+                // Calculate actual radius (limited by edge lengths)
+                const maxRadius = Math.min(len1, len2) / 2;
+                const actualRadius = Math.min(radius, maxRadius);
+
+                // Arc start and end points
+                const arcStart = {
+                    x: curr.x + u1.x * actualRadius,
+                    y: curr.y + u1.y * actualRadius
+                };
+                const arcEnd = {
+                    x: curr.x + u2.x * actualRadius,
+                    y: curr.y + u2.y * actualRadius
+                };
+
+                corners.push({
+                    curr,
+                    arcStart,
+                    arcEnd,
+                    actualRadius,
+                    isOuterCorner
+                });
+            }
+
+            // Build path
+            let firstArcStart = null;
+            
+            for (let i = 0; i < n; i++) {
+                const corner = corners[i];
+                if (!corner) continue;
+
+                const { arcStart, arcEnd, actualRadius, isOuterCorner } = corner;
+
+                if (firstArcStart === null) {
+                    firstArcStart = arcStart;
+                    path += `M ${arcStart.x.toFixed(3)} ${arcStart.y.toFixed(3)} `;
+                } else {
+                    path += `L ${arcStart.x.toFixed(3)} ${arcStart.y.toFixed(3)} `;
+                }
+
+                // Sweep direction:
+                // 
+                // For POSITIVE radius (standard rounding):
+                //   - Outer corners: sweep=1 (arc curves outward, cutting off corner)
+                //   - Inner corners: sweep=0 (arc curves to fill the indent)
+                //
+                // For NEGATIVE radius (concave/inward curves):
+                //   - ALL corners: sweep=0 (arc always curves toward the corner point)
+                //   - This creates notches at outer corners and deepens inner corners
+                
+                let sweepFlag;
+                if (isNegative) {
+                    // Negative radius: always curve toward the corner (concave effect)
+                    sweepFlag = 0;
+                } else {
+                    // Positive radius: standard rounding behavior
+                    sweepFlag = isOuterCorner ? 1 : 0;
+                }
+
+                path += `A ${actualRadius.toFixed(3)} ${actualRadius.toFixed(3)} 0 0 ${sweepFlag} ${arcEnd.x.toFixed(3)} ${arcEnd.y.toFixed(3)} `;
+            }
+
+            path += 'Z ';
+            return path;
+        }
+
+        // ============================================
+        // INDIVIDUAL CELL RENDERING (non-merged)
+        // ============================================
+        
+        // Renders a single cell with OUTWARD rounded corners (positive radius)
+        // Corners are cut off with convex curves - shape is smaller than original square
+        function createOutwardRoundedCellPath(x, y, w, h, radius) {
+            const r = Math.min(radius, Math.min(w, h) / 2);
+            
+            // sweep=1: arcs curve AWAY from corners (toward cell interior)
+            // This cuts off corners with convex curves
+            return `M ${x + r} ${y} ` +
+                   `L ${x + w - r} ${y} ` +
+                   `A ${r} ${r} 0 0 1 ${x + w} ${y + r} ` +
+                   `L ${x + w} ${y + h - r} ` +
+                   `A ${r} ${r} 0 0 1 ${x + w - r} ${y + h} ` +
+                   `L ${x + r} ${y + h} ` +
+                   `A ${r} ${r} 0 0 1 ${x} ${y + h - r} ` +
+                   `L ${x} ${y + r} ` +
+                   `A ${r} ${r} 0 0 1 ${x + r} ${y} Z`;
+        }
+        
+        // Renders a single cell with INWARD concave corners (negative radius)
+        // Corners have concave notches cut into them - creates star-like shape
+        // Edges remain straight, corners get "scooped out"
+        function createInwardConcaveCellPath(x, y, w, h, radius) {
+            const r = Math.min(radius, Math.min(w, h) / 2);
+            
+            if (r < 0.001) {
+                return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+            }
+            
+            // For concave corners, we need arcs that curve TOWARD the corner position
+            // This means the arc center is AT the original corner, not offset from it
+            // sweep=0: counter-clockwise arc, which curves toward the corner
+            //
+            // Visual explanation for top-right corner:
+            // - Original corner is at (x+w, y)  
+            // - Arc goes from (x+w-r, y) to (x+w, y+r)
+            // - With sweep=0, arc curves toward (x+w, y), creating a concave notch
+            // - The filled area EXCLUDES the corner region
+            //
+            // At r = cellSize/2, all offset points meet at edge midpoints,
+            // creating a 4-pointed star shape
+            
+            return `M ${x + r} ${y} ` +
+                   `L ${x + w - r} ${y} ` +
+                   `A ${r} ${r} 0 0 0 ${x + w} ${y + r} ` +
+                   `L ${x + w} ${y + h - r} ` +
+                   `A ${r} ${r} 0 0 0 ${x + w - r} ${y + h} ` +
+                   `L ${x + r} ${y + h} ` +
+                   `A ${r} ${r} 0 0 0 ${x} ${y + h - r} ` +
+                   `L ${x} ${y + r} ` +
+                   `A ${r} ${r} 0 0 0 ${x + r} ${y} Z`;
+        }
+
+        // ============================================
+        // SVG EXPORT
+        // ============================================
+        function exportSVG() {
+            const width = state.workspaceWidth;
+            const height = state.workspaceHeight;
+
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff"/>
+`;
+
+            // Generate drawing content
+            if (state.filledCells.size > 0) {
+                if (state.mergeAdjacent) {
+                    const components = findConnectedComponents();
+                    for (const component of components) {
+                        const path = generateMergedContourPath(component);
+                        if (path) {
+                            svgContent += `  <path d="${path}" fill="${state.fillColor}" fill-rule="evenodd"/>\n`;
+                        }
+                    }
+                } else {
+                    // Non-merged: render each stamp with proper corner treatment
+                    const cellScreenSize = state.cellSize * state.zoom;
+                    const radiusFraction = Math.abs(state.cornerRadius) / 100;
+
+                    for (const stamp of state.stamps) {
+                        const screenPos = gridToScreen(stamp.x, stamp.y);
+                        const stampWidth = stamp.width * cellScreenSize;
+                        const stampHeight = stamp.height * cellScreenSize;
+                        const minDim = Math.min(stampWidth, stampHeight);
+                        const radius = radiusFraction * minDim / 2;
+
+                        if (state.cornerRadius === 0) {
+                            svgContent += `  <rect x="${screenPos.x}" y="${screenPos.y}" width="${stampWidth}" height="${stampHeight}" fill="${state.fillColor}"/>\n`;
+                        } else if (state.cornerRadius > 0) {
+                            const path = createOutwardRoundedCellPath(screenPos.x, screenPos.y, stampWidth, stampHeight, radius);
+                            svgContent += `  <path d="${path}" fill="${state.fillColor}"/>\n`;
+                        } else {
+                            const path = createInwardConcaveCellPath(screenPos.x, screenPos.y, stampWidth, stampHeight, radius);
+                            svgContent += `  <path d="${path}" fill="${state.fillColor}"/>\n`;
+                        }
+                    }
+                }
+            }
+
+            svgContent += '</svg>';
+
+            // Download
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gridmethod-export.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportPNG() {
+            const width = state.workspaceWidth;
+            const height = state.workspaceHeight;
+
+            // Create SVG content with transparent background (no fill on root rect)
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+
+            // Generate drawing content only (no grid, no background image)
+            if (state.filledCells.size > 0) {
+                if (state.mergeAdjacent) {
+                    const components = findConnectedComponents();
+                    for (const component of components) {
+                        const path = generateMergedContourPath(component);
+                        if (path) {
+                            svgContent += `<path d="${path}" fill="${state.fillColor}" fill-rule="evenodd"/>`;
+                        }
+                    }
+                } else {
+                    const cellScreenSize = state.cellSize * state.zoom;
+                    const radiusFraction = Math.abs(state.cornerRadius) / 100;
+
+                    for (const stamp of state.stamps) {
+                        const screenPos = gridToScreen(stamp.x, stamp.y);
+                        const stampWidth = stamp.width * cellScreenSize;
+                        const stampHeight = stamp.height * cellScreenSize;
+                        const minDim = Math.min(stampWidth, stampHeight);
+                        const radius = radiusFraction * minDim / 2;
+
+                        if (state.cornerRadius === 0) {
+                            svgContent += `<rect x="${screenPos.x}" y="${screenPos.y}" width="${stampWidth}" height="${stampHeight}" fill="${state.fillColor}"/>`;
+                        } else if (state.cornerRadius > 0) {
+                            const path = createOutwardRoundedCellPath(screenPos.x, screenPos.y, stampWidth, stampHeight, radius);
+                            svgContent += `<path d="${path}" fill="${state.fillColor}"/>`;
+                        } else {
+                            const path = createInwardConcaveCellPath(screenPos.x, screenPos.y, stampWidth, stampHeight, radius);
+                            svgContent += `<path d="${path}" fill="${state.fillColor}"/>`;
+                        }
+                    }
+                }
+            }
+
+            svgContent += '</svg>';
+
+            // Create canvas with transparent background
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // Keep transparent (don't fill with any color)
+            ctx.clearRect(0, 0, width, height);
+
+            // Convert SVG to data URL and draw to canvas
+            const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            const img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(svgUrl);
+                
+                // Download as PNG
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'gridmethod-export.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            };
+            img.src = svgUrl;
+        }
+
+        // ============================================
+        // UTILITY
+        // ============================================
+        function createSVGElement(tag, attrs = {}) {
+            const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (const [key, value] of Object.entries(attrs)) {
+                el.setAttribute(key, value);
+            }
+            return el;
+        }
+
+        // ============================================
+        // START
+        // ============================================
+        init();
+    })();
+    </script>
+</body>
+</html>
